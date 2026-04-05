@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Id>com.halebop.8chip</Id>
+  <Name>8chip</Name>
+  <Version>0.1.0</Version>
+  <Author>halebop</Author>
+  <Description>A composing toolbox for 8-bit and 16-bit style chiptunes. Generates waveforms, arpeggios, presets, and chiptune effects directly inside Renoise.</Description>
+  <ApiVersion>6</ApiVersion>
+</RenoiseScriptingTool>
