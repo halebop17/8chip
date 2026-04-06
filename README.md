@@ -56,7 +56,7 @@ Browse and load authentic chip instrument presets. Each preset either loads a re
 | NES | Real APU hardware recordings (bundled) | Authentic — staircase triangle, pulse with correct harmonic content |
 | Game Boy | Mathematical | Pulse and noise channels are mathematically exact; wave channel is a user-defined blank canvas by hardware design |
 | C64 / SID | Mathematical (real samples optional — see below) | Falls back to math if BPB samples not installed |
-| Genesis | Mathematical FM | YM2612 is a true FM synth — math is the correct approach |
+| Genesis | Bundled single-cycle samples | Authentic YM2612 FM tones; kick, snare, and hi-hat are one-shot recordings |
 
 **Controls:**
 - **Console** — dropdown to select category
@@ -157,7 +157,7 @@ Writes pitch effect commands (`0U` slide up, `0D` slide down, `0G` portamento) i
 **Controls:**
 - **Preset** — type selector
 - **Note / Start note / End note** — pitch reference(s) depending on preset
-- **Speed** — effect value 0–255 controlling sweep rate
+- **Speed (Sweep Rate)** — effect value 0–255 controlling sweep rate
 - **Sweep lines** — number of lines for the pitch effect to run
 - **LPB** — phrase lines per beat
 - **Length** — total phrase length
@@ -283,13 +283,34 @@ These are stored in `data/nes_samples/` inside the tool bundle.
 
 ---
 
+## Bundled Genesis Samples
+
+The Genesis presets use authentic YM2612 FM tones as single-cycle WAV files. Melodic presets loop over a single C4 cycle; percussion presets are full one-shot recordings.
+
+| File | Type | Preset |
+|------|------|--------|
+| `genesis_bass.wav` | Single-cycle loop | Genesis — Bass |
+| `genesis_epiano.wav` | Single-cycle loop | Genesis — Electric Piano |
+| `genesis_lead.wav` | Single-cycle loop | Genesis — Lead |
+| `genesis_bell.wav` | Single-cycle loop | Genesis — Bell |
+| `genesis_brass.wav` | Single-cycle loop | Genesis — Brass |
+| `genesis_clav.wav` | Single-cycle loop | Genesis — Clavinet |
+| `genesis_organ.wav` | Single-cycle loop | Genesis — Organ |
+| `genesis_kick.wav` | One-shot | Genesis — Kick |
+| `genesis_snare.wav` | One-shot | Genesis — Snare |
+| `genesis_hihat.wav` | One-shot | Genesis — Hi-Hat |
+
+These are stored in `data/genesis_samples/` inside the tool bundle.
+
+---
+
 ## Tips
 
 - **Phrase LPB vs song LPB:** Phrases have their own LPB setting independent of the song. High phrase LPB (32–64) gives ultra-fast chip arps even at a slow song tempo.
 - **Kit routing:** When loading a Full Kit, trigger the phrase-holder slot in your pattern. The phrase's instrument column values reference which sound slot plays on each line. Use the instrument column in the phrase editor to route individual lines to different sounds.
 - **Layering presets:** Load multiple presets then route them via the pattern's instrument column for multi-timbral chip tracks.
 - **Math + effects:** The math presets (C64, Genesis) are designed to be starting points. Apply the Arp, Pitch, Mod, and Drums tabs on top to add authentic chip character.
-- **Genesis FM:** Adjust the FM Ratio and FM Mod sliders in the Waveforms tab for different YM2612 tones. Low mod index (0.3–1.0) = electric piano / organ. High ratio (7.0+) = metallic / bell. Extreme mod index (4.0+) = distorted bass.
+- **Genesis FM in Waveforms tab:** The Waveforms tab FM generator still works independently. Low mod index (0.3–1.0) = electric piano / organ. High ratio (7.0+) = metallic / bell. Extreme mod index (4.0+) = distorted bass. The Genesis presets in the Presets tab use bundled samples.
 
 ---
 
@@ -304,12 +325,12 @@ com.halebop.8chip.xrnx/
 │   ├── chords.lua                ← chord interval tables
 │   ├── nes_samples/              ← bundled NES APU recordings (CC0)
 │   ├── c64_samples/              ← optional BPB SID samples (user-installed)
+│   ├── genesis_samples/       ← bundled Genesis YM2612 WAV samples
 │   └── presets/
 │       ├── nes.lua
 │       ├── gameboy.lua
 │       ├── c64.lua
-│       ├── genesis.lua
-│       └── universal.lua
+│       └── genesis.lua
 ├── waveforms/
 │   └── generators.lua            ← math waveform generators + sample loader
 ├── generators/
