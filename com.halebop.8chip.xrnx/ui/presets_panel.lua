@@ -9,11 +9,10 @@ local gen = require("waveforms.generators")
 -- ---------------------------------------------------------------------------
 
 local CATEGORIES = {
-  { label = "NES",       file = "data.presets.nes"       },
-  { label = "Game Boy",  file = "data.presets.gameboy"   },
-  { label = "C64 / SID", file = "data.presets.c64"       },
-  { label = "Genesis",   file = "data.presets.genesis"   },
-  { label = "Universal", file = "data.presets.universal" },
+  { label = "NES",       file = "data.presets.nes"     },
+  { label = "Game Boy",  file = "data.presets.gameboy" },
+  { label = "C64 / SID", file = "data.presets.c64"    },
+  { label = "Genesis",   file = "data.presets.genesis" },
 }
 
 -- Cache loaded preset tables so they are only required once
