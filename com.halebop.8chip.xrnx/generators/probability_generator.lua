@@ -31,8 +31,8 @@ end
 
 -- Returns true if a pattern line has at least one note.
 local function line_has_note(line)
-  for c = 1, line.number_of_note_columns do
-    if line:note_column(c).note_string ~= "---" then
+  for _, col in ipairs(line.note_columns) do
+    if col.note_string ~= "---" then
       return true
     end
   end

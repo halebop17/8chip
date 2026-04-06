@@ -23,6 +23,17 @@ local function pack_nibbles(speed, depth)
   return hex2(s * 16 + d)
 end
 
+-- Find the first free effect column on a phrase line (for merge mode).
+local function find_free_efx_col(line)
+  for ec = 1, #line.effect_columns do
+    local col = line:effect_column(ec)
+    if col.number_string == "00" or col.number_string == "" then
+      return col
+    end
+  end
+  return nil  -- all columns occupied; silently skip
+end
+
 local function get_or_create_phrase(instrument, lpb, phrase_len, looping)
   if #instrument.phrases == 0 then
     instrument:insert_phrase_at(1)
@@ -51,11 +62,12 @@ function M.write_vibrato(instrument, note, speed, depth, lpb, phrase_len, loopin
 
   for i = 1, phrase_len do
     local line = phrase:line(i)
-    line:clear()
-    local efx = line:effect_column(1)
-    efx.number_string = "0V"
-    efx.amount_string = effect_str
-    if i == 1 then
+    local efx = find_free_efx_col(line)
+    if efx then
+      efx.number_string = "0V"
+      efx.amount_string = effect_str
+    end
+    if i == 1 and line:note_column(1).note_string == "---" then
       local ncol = line:note_column(1)
       ncol.note_string   = note_str
       ncol.volume_string = "7F"
@@ -75,11 +87,12 @@ function M.write_tremolo(instrument, note, speed, depth, lpb, phrase_len, loopin
 
   for i = 1, phrase_len do
     local line = phrase:line(i)
-    line:clear()
-    local efx = line:effect_column(1)
-    efx.number_string = "0T"
-    efx.amount_string = effect_str
-    if i == 1 then
+    local efx = find_free_efx_col(line)
+    if efx then
+      efx.number_string = "0T"
+      efx.amount_string = effect_str
+    end
+    if i == 1 and line:note_column(1).note_string == "---" then
       local ncol = line:note_column(1)
       ncol.note_string   = note_str
       ncol.volume_string = "7F"
@@ -99,11 +112,12 @@ function M.write_autopan(instrument, note, speed, depth, lpb, phrase_len, loopin
 
   for i = 1, phrase_len do
     local line = phrase:line(i)
-    line:clear()
-    local efx = line:effect_column(1)
-    efx.number_string = "0N"
-    efx.amount_string = effect_str
-    if i == 1 then
+    local efx = find_free_efx_col(line)
+    if efx then
+      efx.number_string = "0N"
+      efx.amount_string = effect_str
+    end
+    if i == 1 and line:note_column(1).note_string == "---" then
       local ncol = line:note_column(1)
       ncol.note_string   = note_str
       ncol.volume_string = "7F"
