@@ -4,6 +4,13 @@
 
 local M = {}
 
+local NOTE_NAMES = {"C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"}
+local function note_to_string(midi_note)
+  local oct  = math.floor(midi_note / 12)
+  local semi = midi_note % 12
+  return NOTE_NAMES[semi + 1] .. tostring(oct)
+end
+
 local function hex2(v)
   return string.format("%02X", math.max(0, math.min(255, math.floor(v))))
 end
@@ -40,10 +47,7 @@ function M.write_vibrato(instrument, note, speed, depth, lpb, phrase_len, loopin
   local effect_str = pack_nibbles(speed, depth)
   local phrase     = get_or_create_phrase(instrument, lpb, phrase_len, looping)
 
-  local NOTE_NAMES = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"}
-  local oct  = math.floor(note / 12)
-  local semi = note % 12
-  local note_str = NOTE_NAMES[semi + 1] .. tostring(oct)
+  local note_str = note_to_string(note)
 
   for i = 1, phrase_len do
     local line = phrase:line(i)
@@ -67,10 +71,7 @@ function M.write_tremolo(instrument, note, speed, depth, lpb, phrase_len, loopin
   local effect_str = pack_nibbles(speed, depth)
   local phrase     = get_or_create_phrase(instrument, lpb, phrase_len, looping)
 
-  local NOTE_NAMES = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"}
-  local oct  = math.floor(note / 12)
-  local semi = note % 12
-  local note_str = NOTE_NAMES[semi + 1] .. tostring(oct)
+  local note_str = note_to_string(note)
 
   for i = 1, phrase_len do
     local line = phrase:line(i)
@@ -94,10 +95,7 @@ function M.write_autopan(instrument, note, speed, depth, lpb, phrase_len, loopin
   local effect_str = pack_nibbles(speed, depth)
   local phrase     = get_or_create_phrase(instrument, lpb, phrase_len, looping)
 
-  local NOTE_NAMES = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"}
-  local oct  = math.floor(note / 12)
-  local semi = note % 12
-  local note_str = NOTE_NAMES[semi + 1] .. tostring(oct)
+  local note_str = note_to_string(note)
 
   for i = 1, phrase_len do
     local line = phrase:line(i)

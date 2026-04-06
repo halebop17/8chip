@@ -13,7 +13,7 @@ local function hex2(v)
 end
 
 local function note_to_string(midi_note)
-  local names = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"}
+  local names = {"C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"}
   local oct  = math.floor(midi_note / 12)
   local semi = midi_note % 12
   return names[semi + 1] .. tostring(oct)
