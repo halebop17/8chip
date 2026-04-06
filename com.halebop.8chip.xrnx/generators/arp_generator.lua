@@ -84,13 +84,13 @@ end
 
 -- ---------------------------------------------------------------------------
 -- Shared: get or create a phrase in the selected instrument
--- Respects instrument.selected_phrase_index if a phrase is already selected.
+-- Respects renoise.song().selected_phrase_index if a phrase is already selected.
 -- ---------------------------------------------------------------------------
 local function get_or_create_phrase(instrument)
   if #instrument.phrases == 0 then
     instrument:insert_phrase_at(1)
   end
-  local idx = instrument.selected_phrase_index
+  local idx = renoise.song().selected_phrase_index
   if idx and idx >= 1 and idx <= #instrument.phrases then
     return instrument.phrases[idx]
   end
