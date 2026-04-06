@@ -212,4 +212,74 @@ function M.load_nes_sample(instrument, waveform_key, sample_name)
   return true
 end
 
+-- ---------------------------------------------------------------------------
+-- Genesis Authentic Sample loader
+-- Loads one of the bundled single-cycle (or one-shot) Genesis WAV files
+-- processed from chipsynth MD recordings into instrument slot 1.
+--
+-- waveform_key must be one of:
+--   "genesis_bass"    → genesis_bass.wav    (single-cycle, forward loop)
+--   "genesis_epiano"  → genesis_epiano.wav  (single-cycle, forward loop)
+--   "genesis_lead"    → genesis_lead.wav    (single-cycle, forward loop)
+--   "genesis_bell"    → genesis_bell.wav    (single-cycle, forward loop)
+--   "genesis_brass"   → genesis_brass.wav   (single-cycle, forward loop)
+--   "genesis_clav"    → genesis_clav.wav    (single-cycle, forward loop)
+--   "genesis_organ"   → genesis_organ.wav   (single-cycle, forward loop)
+--   "genesis_kick"    → genesis_kick.wav    (one-shot, no loop)
+--   "genesis_snare"   → genesis_snare.wav   (one-shot, no loop)
+--   "genesis_hihat"   → genesis_hihat.wav   (one-shot, no loop)
+-- ---------------------------------------------------------------------------
+
+local GENESIS_SAMPLE_FILES = {
+  genesis_bass   = "genesis_bass.wav",
+  genesis_epiano = "genesis_epiano.wav",
+  genesis_lead   = "genesis_lead.wav",
+  genesis_bell   = "genesis_bell.wav",
+  genesis_brass  = "genesis_brass.wav",
+  genesis_clav   = "genesis_clav.wav",
+  genesis_organ  = "genesis_organ.wav",
+  genesis_kick   = "genesis_kick.wav",
+  genesis_snare  = "genesis_snare.wav",
+  genesis_hihat  = "genesis_hihat.wav",
+}
+
+local GENESIS_ONESHOTS = {
+  genesis_kick  = true,
+  genesis_snare = true,
+  genesis_hihat = true,
+}
+
+function M.load_genesis_sample(instrument, waveform_key, sample_name)
+  local filename = GENESIS_SAMPLE_FILES[waveform_key]
+  if not filename then
+    renoise.app():show_error("8chip: Unknown Genesis waveform key: " .. tostring(waveform_key))
+    return false
+  end
+
+  local path = renoise.tool().bundle_path .. "data/genesis_samples/" .. filename
+
+  M.ensure_sample_slot(instrument)
+  local sample = instrument.samples[1]
+  sample.name  = sample_name or waveform_key
+
+  local buf       = sample.sample_buffer
+  local ok, err   = buf:load_from(path)
+  if not ok then
+    renoise.app():show_error("8chip: Could not load Genesis sample.\n" .. tostring(err))
+    return false
+  end
+
+  if GENESIS_ONESHOTS[waveform_key] then
+    sample.loop_mode = renoise.Sample.LOOP_MODE_OFF
+  else
+    -- Single-cycle forward loop
+    sample.loop_mode  = renoise.Sample.LOOP_MODE_FORWARD
+    sample.loop_start = 1
+    sample.loop_end   = buf.number_of_frames
+  end
+  -- base_note is not settable via the Renoise Lua API.
+
+  return true
+end
+
 return M

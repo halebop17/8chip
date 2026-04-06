@@ -43,6 +43,11 @@ local function is_nes_authentic(waveform)
   return waveform and waveform:sub(1, 4) == "nes_"
 end
 
+-- Returns true if the preset uses an authentic Genesis sample file.
+local function is_genesis_authentic(waveform)
+  return waveform and waveform:sub(1, 8) == "genesis_"
+end
+
 local function build_frames_from_preset(p)
   local nf = p.num_frames or 256
   if p.waveform == "pulse" then
@@ -56,7 +61,8 @@ local function build_frames_from_preset(p)
 end
 
 -- Write preset waveform into the given instrument at sample slot 1.
--- Routes nes_* types through load_nes_sample(); all others use the math path.
+-- Routes nes_* through load_nes_sample(), genesis_* through load_genesis_sample(),
+-- all others use the math path.
 local function apply_preset_to_instrument(preset, instrument)
   if is_nes_authentic(preset.waveform) then
     gen.load_nes_sample(instrument, preset.waveform, preset.name)
@@ -64,6 +70,15 @@ local function apply_preset_to_instrument(preset, instrument)
     if preset.loop_mode == "off" then
       instrument.samples[1].loop_mode = renoise.Sample.LOOP_MODE_OFF
     elseif preset.loop_mode == "ping_pong" then
+      instrument.samples[1].loop_mode = renoise.Sample.LOOP_MODE_PING_PONG
+    end
+    return
+  end
+
+  if is_genesis_authentic(preset.waveform) then
+    gen.load_genesis_sample(instrument, preset.waveform, preset.name)
+    -- load_genesis_sample sets loop mode from its own table; allow ping_pong override
+    if preset.loop_mode == "ping_pong" then
       instrument.samples[1].loop_mode = renoise.Sample.LOOP_MODE_PING_PONG
     end
     return
