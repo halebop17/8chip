@@ -40,16 +40,21 @@ local function hex2(v)
   return string.format("%02X", math.max(0, math.min(255, math.floor(v))))
 end
 
--- Pick a consistent effect column for the whole phrase.
--- If col 1 is already occupied on any line, use col 2 for everything.
+-- Pick the first effect column that is empty on every line of the phrase.
 local function pick_efx_col(phrase, phrase_len)
-  for i = 1, phrase_len do
-    local col = phrase:line(i):effect_column(1)
-    if col.number_string ~= "00" and col.number_string ~= "" and col.number_string ~= ".." then
-      return 2
+  local num_cols = #phrase:line(1).effect_columns
+  for ec = 1, num_cols do
+    local free = true
+    for i = 1, phrase_len do
+      local col = phrase:line(i):effect_column(ec)
+      if col.number_string ~= "00" and col.number_string ~= "" and col.number_string ~= ".." then
+        free = false
+        break
+      end
     end
+    if free then return ec end
   end
-  return 1
+  return num_cols  -- all occupied; use last column
 end
 
 -- ---------------------------------------------------------------------------
