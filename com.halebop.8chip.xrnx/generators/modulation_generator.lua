@@ -39,7 +39,13 @@ local function get_or_create_phrase(instrument, lpb, phrase_len, looping)
   if #instrument.phrases == 0 then
     instrument:insert_phrase_at(1)
   end
-  local phrase = instrument.phrases[1]
+  local idx = instrument.selected_phrase_index
+  local phrase
+  if idx and idx >= 1 and idx <= #instrument.phrases then
+    phrase = instrument.phrases[idx]
+  else
+    phrase = instrument.phrases[1]
+  end
   phrase.number_of_lines = phrase_len
   phrase.lpb     = lpb
   phrase.looping = looping

@@ -20,6 +20,10 @@ local function get_or_create_phrase(instrument)
   if #instrument.phrases == 0 then
     instrument:insert_phrase_at(1)
   end
+  local idx = instrument.selected_phrase_index
+  if idx and idx >= 1 and idx <= #instrument.phrases then
+    return instrument.phrases[idx]
+  end
   return instrument.phrases[1]
 end
 
