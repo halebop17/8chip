@@ -30,6 +30,11 @@ local function build_note_items()
 end
 
 -- ---------------------------------------------------------------------------
+-- Live mode state — module-level so notifiers survive panel recreation
+-- ---------------------------------------------------------------------------
+local live_mode_active = false
+
+-- ---------------------------------------------------------------------------
 -- Preview arp: synthesise the arp sequence as a square-wave audio buffer,
 -- write it to a temporary sample slot, play it, then clean it up.
 -- trigger_instrument_note_on only plays raw samples; it does not trigger
@@ -340,7 +345,7 @@ function create_arp_panel(vb)
 
     vb:space { height = 6 },
 
-    -- Action buttons
+    -- Action buttons + Live mode
     vb:row {
       spacing = 8,
       vb:button {
@@ -351,6 +356,7 @@ function create_arp_panel(vb)
         end,
       },
       vb:button {
+        id       = "arp_write_btn",
         text     = "Write Phrase to Selected Instrument",
         width    = 250,
         notifier = function()
@@ -360,14 +366,14 @@ function create_arp_panel(vb)
             renoise.app():show_error("8chip: No instrument selected.")
             return
           end
-          local root   = prefs.arp_root_note.value
-          local cidx   = prefs.arp_chord_type.value
-          local ospan  = prefs.arp_octave_span.value
-          local ptype  = prefs.arp_pattern.value
-          local lpb    = LPB_VALUES[prefs.arp_lpb.value]
-          local plen   = PHRASE_LENS[prefs.arp_phrase_len.value] or 16
+          local root    = prefs.arp_root_note.value
+          local cidx    = prefs.arp_chord_type.value
+          local ospan   = prefs.arp_octave_span.value
+          local ptype   = prefs.arp_pattern.value
+          local lpb     = LPB_VALUES[prefs.arp_lpb.value]
+          local plen    = PHRASE_LENS[prefs.arp_phrase_len.value] or 16
           local looping = prefs.arp_loop.value
-          local mode   = prefs.arp_mode.value
+          local mode    = prefs.arp_mode.value
           if mode == 1 then
             arp.write_hardware_mode(instr, root, cidx, ospan, ptype, lpb, plen, looping)
           elseif mode == 2 then
@@ -379,7 +385,72 @@ function create_arp_panel(vb)
         end,
       },
     },
+
+    -- Live mode row (Script mode only)
+    vb:row {
+      id      = "arp_live_row",
+      spacing = 8,
+      visible = (prefs.arp_mode.value == 3),
+      vb:checkbox {
+        id    = "arp_live_check",
+        value = false,
+        notifier = function(enabled)
+          live_mode_active = enabled
+          vb.views["arp_live_status"].text = enabled
+            and "LIVE — chord/root changes apply instantly at next loop"
+            or  "Off"
+          vb.views["arp_live_status"].style = enabled and "strong" or "disabled"
+        end,
+      },
+      vb:text { text = "Live Mode", width = 80 },
+      vb:text {
+        id    = "arp_live_status",
+        text  = "Off",
+        style = "disabled",
+        width = W - 120,
+      },
+    },
   }
+
+  -- Helper: re-write script phrase on the current instrument if live mode is on
+  local function live_update()
+    if not live_mode_active then return end
+    if prefs.arp_mode.value ~= 3 then return end
+    local instr = renoise.song().selected_instrument
+    if not instr then return end
+    pcall(function()
+      arp.write_script_mode(
+        instr,
+        prefs.arp_root_note.value,
+        prefs.arp_chord_type.value,
+        prefs.arp_octave_span.value,
+        prefs.arp_pattern.value,
+        LPB_VALUES[prefs.arp_lpb.value],
+        prefs.arp_loop.value
+      )
+    end)
+  end
+
+  -- Attach live_update to every control that affects the script output
+  prefs.arp_root_note:add_notifier(live_update)
+  prefs.arp_chord_type:add_notifier(live_update)
+  prefs.arp_octave_span:add_notifier(live_update)
+  prefs.arp_pattern:add_notifier(live_update)
+  prefs.arp_lpb:add_notifier(live_update)
+  prefs.arp_loop:add_notifier(live_update)
+
+  -- Show/hide live row when mode changes
+  prefs.arp_mode:add_notifier(function()
+    local is_script = (prefs.arp_mode.value == 3)
+    vb.views["arp_live_row"].visible = is_script
+    -- Turn off live mode when leaving Script
+    if not is_script and live_mode_active then
+      live_mode_active = false
+      vb.views["arp_live_check"].value = false
+      vb.views["arp_live_status"].text  = "Off"
+      vb.views["arp_live_status"].style = "disabled"
+    end
+  end)
 
   -- Init mode hint
   refresh_mode_hint()
