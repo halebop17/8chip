@@ -309,6 +309,7 @@ These are stored in `data/genesis_samples/` inside the tool bundle.
 - **Phrase LPB vs song LPB:** Phrases have their own LPB setting independent of the song. High phrase LPB (32–64) gives ultra-fast chip arps even at a slow song tempo.
 - **Kit routing:** When loading a Full Kit, trigger the phrase-holder slot in your pattern. The phrase's instrument column values reference which sound slot plays on each line. Use the instrument column in the phrase editor to route individual lines to different sounds.
 - **Layering presets:** Load multiple presets then route them via the pattern's instrument column for multi-timbral chip tracks.
+- **Layering Arp / Pitch / Mod on the same phrase:** Each tab detects occupied effect columns and writes to the next free lane automatically — so you can apply them in sequence without overwriting. The safe rule: **Pitch + Mod is always safe. Arp + Pitch slide is safe. Arp + Vibrato is the one to avoid** — both fight over pitch simultaneously and produce unpredictable results. Arp + Tremolo/Auto-Pan is fine since those affect volume and stereo position, not pitch.
 - **Math + effects:** The math presets (C64, Genesis) are designed to be starting points. Apply the Arp, Pitch, Mod, and Drums tabs on top to add authentic chip character.
 - **Genesis FM in Waveforms tab:** The Waveforms tab FM generator still works independently. Low mod index (0.3–1.0) = electric piano / organ. High ratio (7.0+) = metallic / bell. Extreme mod index (4.0+) = distorted bass. The Genesis presets in the Presets tab use bundled samples.
 
