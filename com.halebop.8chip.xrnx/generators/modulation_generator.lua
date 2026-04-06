@@ -23,15 +23,16 @@ local function pack_nibbles(speed, depth)
   return hex2(s * 16 + d)
 end
 
--- Find the first free effect column on a phrase line (for merge mode).
-local function find_free_efx_col(line)
-  for ec = 1, #line.effect_columns do
-    local col = line:effect_column(ec)
-    if col.number_string == "00" or col.number_string == "" then
-      return col
+-- Pick a consistent effect column for the whole phrase.
+-- If col 1 is already occupied on any line, use col 2 for everything.
+local function pick_efx_col(phrase, phrase_len)
+  for i = 1, phrase_len do
+    local col = phrase:line(i):effect_column(1)
+    if col.number_string ~= "00" and col.number_string ~= "" and col.number_string ~= ".." then
+      return 2
     end
   end
-  return nil  -- all columns occupied; silently skip
+  return 1
 end
 
 local function get_or_create_phrase(instrument, lpb, phrase_len, looping)
@@ -57,16 +58,14 @@ end
 function M.write_vibrato(instrument, note, speed, depth, lpb, phrase_len, looping)
   local effect_str = pack_nibbles(speed, depth)
   local phrase     = get_or_create_phrase(instrument, lpb, phrase_len, looping)
-
-  local note_str = note_to_string(note)
+  local note_str   = note_to_string(note)
+  local ecol       = pick_efx_col(phrase, phrase_len)
 
   for i = 1, phrase_len do
     local line = phrase:line(i)
-    local efx = find_free_efx_col(line)
-    if efx then
-      efx.number_string = "0V"
-      efx.amount_string = effect_str
-    end
+    local efx  = line:effect_column(ecol)
+    efx.number_string = "0V"
+    efx.amount_string = effect_str
     if i == 1 and line:note_column(1).note_string == "---" then
       local ncol = line:note_column(1)
       ncol.note_string   = note_str
@@ -82,16 +81,14 @@ end
 function M.write_tremolo(instrument, note, speed, depth, lpb, phrase_len, looping)
   local effect_str = pack_nibbles(speed, depth)
   local phrase     = get_or_create_phrase(instrument, lpb, phrase_len, looping)
-
-  local note_str = note_to_string(note)
+  local note_str   = note_to_string(note)
+  local ecol       = pick_efx_col(phrase, phrase_len)
 
   for i = 1, phrase_len do
     local line = phrase:line(i)
-    local efx = find_free_efx_col(line)
-    if efx then
-      efx.number_string = "0T"
-      efx.amount_string = effect_str
-    end
+    local efx  = line:effect_column(ecol)
+    efx.number_string = "0T"
+    efx.amount_string = effect_str
     if i == 1 and line:note_column(1).note_string == "---" then
       local ncol = line:note_column(1)
       ncol.note_string   = note_str
@@ -107,16 +104,14 @@ end
 function M.write_autopan(instrument, note, speed, depth, lpb, phrase_len, looping)
   local effect_str = pack_nibbles(speed, depth)
   local phrase     = get_or_create_phrase(instrument, lpb, phrase_len, looping)
-
-  local note_str = note_to_string(note)
+  local note_str   = note_to_string(note)
+  local ecol       = pick_efx_col(phrase, phrase_len)
 
   for i = 1, phrase_len do
     local line = phrase:line(i)
-    local efx = find_free_efx_col(line)
-    if efx then
-      efx.number_string = "0N"
-      efx.amount_string = effect_str
-    end
+    local efx  = line:effect_column(ecol)
+    efx.number_string = "0N"
+    efx.amount_string = effect_str
     if i == 1 and line:note_column(1).note_string == "---" then
       local ncol = line:note_column(1)
       ncol.note_string   = note_str

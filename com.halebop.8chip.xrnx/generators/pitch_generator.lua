@@ -36,6 +36,18 @@ local function hex2(v)
   return string.format("%02X", math.max(0, math.min(255, math.floor(v))))
 end
 
+-- Pick a consistent effect column for the whole phrase.
+-- If col 1 is already occupied on any line, use col 2 for everything.
+local function pick_efx_col(phrase, phrase_len)
+  for i = 1, phrase_len do
+    local col = phrase:line(i):effect_column(1)
+    if col.number_string ~= "00" and col.number_string ~= "" and col.number_string ~= ".." then
+      return 2
+    end
+  end
+  return 1
+end
+
 -- ---------------------------------------------------------------------------
 -- Laser zap: sharp upward pitch sweep then cut
 -- note       : base note (MIDI 0–119)
@@ -48,11 +60,12 @@ function M.write_laser_zap(instrument, note, speed, rise_lines, lpb, phrase_len,
   configure_phrase(phrase, lpb, phrase_len, looping)
 
   local spd_str = hex2(speed)
+  local ecol    = pick_efx_col(phrase, phrase_len)
 
   for line_idx = 1, phrase_len do
     local pline = phrase:line(line_idx)
     local ncol  = pline:note_column(1)
-    local efx   = pline:effect_column(1)
+    local efx   = pline:effect_column(ecol)
 
     if line_idx == 1 then
       ncol.note_string   = note_to_string(math.max(0, math.min(119, note)))
@@ -65,7 +78,6 @@ function M.write_laser_zap(instrument, note, speed, rise_lines, lpb, phrase_len,
       efx.number_string = "0U"
       efx.amount_string = spd_str
     elseif line_idx == rise_lines + 1 then
-      -- Cut the note at the top of the sweep
       efx.number_string = "0C"
       efx.amount_string = "00"
     else
@@ -85,11 +97,12 @@ function M.write_kick_drop(instrument, note, speed, drop_lines, lpb, phrase_len,
   configure_phrase(phrase, lpb, phrase_len, looping)
 
   local spd_str = hex2(speed)
+  local ecol    = pick_efx_col(phrase, phrase_len)
 
   for line_idx = 1, phrase_len do
     local pline = phrase:line(line_idx)
     local ncol  = pline:note_column(1)
-    local efx   = pline:effect_column(1)
+    local efx   = pline:effect_column(ecol)
 
     if line_idx == 1 then
       ncol.note_string   = note_to_string(math.max(0, math.min(119, note)))
@@ -121,20 +134,19 @@ function M.write_glide(instrument, note_start, note_end, glide_speed, lpb, phras
   local spd_str = hex2(glide_speed)
   local ns      = note_to_string(math.max(0, math.min(119, note_start)))
   local ne      = note_to_string(math.max(0, math.min(119, note_end)))
+  local ecol    = pick_efx_col(phrase, phrase_len)
 
   for line_idx = 1, phrase_len do
     local pline = phrase:line(line_idx)
     local ncol  = pline:note_column(1)
-    local efx   = pline:effect_column(1)
+    local efx   = pline:effect_column(ecol)
 
     if line_idx == 1 then
-      -- First line: play start note, no glide yet
       ncol.note_string   = ns
       ncol.volume_string = ".."
       efx.number_string  = ".."
       efx.amount_string  = ".."
     elseif line_idx == 2 then
-      -- Second line: target note with glide command
       ncol.note_string   = ne
       ncol.volume_string = ".."
       efx.number_string  = "0G"
@@ -158,14 +170,13 @@ function M.write_portamento_bass(instrument, root_note, glide_speed, lpb, phrase
   configure_phrase(phrase, lpb, phrase_len, looping)
 
   local spd_str = hex2(glide_speed)
-
-  -- Simple alternating root / fifth pattern
-  local pattern = { 0, 7, 5, 7 }
+  local pattern  = { 0, 7, 5, 7 }
+  local ecol     = pick_efx_col(phrase, phrase_len)
 
   for line_idx = 1, phrase_len do
     local pline    = phrase:line(line_idx)
     local ncol     = pline:note_column(1)
-    local efx      = pline:effect_column(1)
+    local efx      = pline:effect_column(ecol)
     local interval = pattern[((line_idx - 1) % #pattern) + 1]
     local note_val = math.max(0, math.min(119, root_note + interval))
 
