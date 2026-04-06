@@ -29,7 +29,7 @@ local function get_or_create_phrase(instrument, lpb, phrase_len, looping)
   phrase.lpb = lpb
   phrase.looping = looping
   if phrase.playback_mode ~= nil then
-    phrase.playback_mode = renoise.Instrument.PHRASES_PLAY_KEYMAP
+    phrase.playback_mode = renoise.InstrumentPhrase.PLAY_PATTERN
   end
   return phrase
 end
