@@ -307,7 +307,7 @@ function create_modulation_panel(vb)
     -- Pattern-mode info (no extra controls needed)
     vb:text {
       id    = "mod_pattern_note",
-      text  = "Injects into notes in the selected pattern region (or whole track if no selection).",
+      text  = "Injects effects onto lines that already have a note trigger in the selected pattern region (or whole track if no selection). Does not write or remove notes.",
       style = "disabled",
       visible = false,
     },

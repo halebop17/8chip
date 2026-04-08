@@ -86,9 +86,19 @@ end
 -- Shared: get or create a phrase in the selected instrument
 -- Respects renoise.song().selected_phrase_index if a phrase is already selected.
 -- ---------------------------------------------------------------------------
+-- get_or_create_phrase: always inserts a fresh phrase (for Write button).
 local function get_or_create_phrase(instrument)
+  local new_idx = #instrument.phrases + 1
+  instrument:insert_phrase_at(new_idx)
+  renoise.song().selected_phrase_index = new_idx
+  return instrument.phrases[new_idx]
+end
+
+-- get_or_reuse_phrase: reuses the currently selected phrase (for Live mode).
+local function get_or_reuse_phrase(instrument)
   if #instrument.phrases == 0 then
     instrument:insert_phrase_at(1)
+    renoise.song().selected_phrase_index = 1
   end
   local idx = renoise.song().selected_phrase_index
   if idx and idx >= 1 and idx <= #instrument.phrases then
@@ -253,13 +263,14 @@ local function lpb_to_unit(lpb)
 end
 
 function M.write_script_mode(instrument, root_note, chord_idx, octave_span,
-                              pattern_type, lpb, do_loop)
+                              pattern_type, lpb, do_loop, reuse_phrase)
   local intervals  = chords.get_intervals(chord_idx)
   local note_list  = build_pattrns_note_list(root_note, intervals, octave_span, pattern_type)
   local unit       = lpb_to_unit(lpb)
   local chord_name = chords.chords[chord_idx].name
 
-  local phrase = get_or_create_phrase(instrument)
+  local phrase = reuse_phrase and get_or_reuse_phrase(instrument)
+                               or get_or_create_phrase(instrument)
 
   -- Switch to PLAY_SCRIPT mode (Renoise 3.5+)
   if phrase.playback_mode ~= nil then

@@ -5,7 +5,7 @@
 local gen = require("waveforms.generators")
 
 local WAVEFORM_NAMES = {
-  "Sine", "Square (50%)", "Pulse", "Sawtooth", "Triangle", "Noise", "FM"
+  "Sine", "Pulse", "Square (50%)", "Sawtooth", "Triangle", "Noise", "FM"
 }
 local SAMPLE_RATES       = { 8000, 11025, 22050, 44100 }
 local SAMPLE_RATE_LABELS = { "8000 Hz (lo-fi)", "11025 Hz", "22050 Hz", "44100 Hz (full)" }
@@ -31,9 +31,9 @@ local function build_frames(prefs)
   if t == 1 then
     return gen.generate_sine(nf)
   elseif t == 2 then
-    return gen.generate_square(nf)
-  elseif t == 3 then
     return gen.generate_pulse(nf, prefs.duty_pct.value / 100.0)
+  elseif t == 3 then
+    return gen.generate_square(nf)
   elseif t == 4 then
     return gen.generate_sawtooth(nf)
   elseif t == 5 then
@@ -82,7 +82,7 @@ function create_waveform_panel(vb)
   -- Track which rows need show/hide based on waveform type
   local function refresh_visibility()
     local t        = prefs.waveform_type.value
-    local is_pulse = (t == 3)
+    local is_pulse = (t == 2)
     local is_fm    = (t == 7)
     vb.views["wf_duty_row"].visible = is_pulse
     vb.views["wf_fm_row"].visible   = is_fm
@@ -176,7 +176,7 @@ function create_waveform_panel(vb)
     -- Duty cycle row (Pulse only)
     vb:row {
       id      = "wf_duty_row",
-      visible = (prefs.waveform_type.value == 3),
+      visible = (prefs.waveform_type.value == 2),
       spacing = 8,
       vb:text { text = "Duty Cycle", width = 90 },
       vb:slider {

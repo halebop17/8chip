@@ -41,16 +41,10 @@ local function pick_efx_col(phrase, phrase_len)
 end
 
 local function get_or_create_phrase(instrument, lpb, phrase_len, looping)
-  if #instrument.phrases == 0 then
-    instrument:insert_phrase_at(1)
-  end
-  local idx = renoise.song().selected_phrase_index
-  local phrase
-  if idx and idx >= 1 and idx <= #instrument.phrases then
-    phrase = instrument.phrases[idx]
-  else
-    phrase = instrument.phrases[1]
-  end
+  local new_idx = #instrument.phrases + 1
+  instrument:insert_phrase_at(new_idx)
+  renoise.song().selected_phrase_index = new_idx
+  local phrase = instrument.phrases[new_idx]
   phrase.number_of_lines = phrase_len
   phrase.lpb     = lpb
   phrase.looping = looping
@@ -77,7 +71,8 @@ function M.write_vibrato(instrument, note, speed, depth, lpb, phrase_len, loopin
     local efx  = line:effect_column(ecol)
     efx.number_string = "0V"
     efx.amount_string = effect_str
-    if i == 1 and line:note_column(1).note_string == "---" then
+    -- Write trigger note on line 1 (phrase is always fresh/empty)
+    if i == 1 then
       local ncol = line:note_column(1)
       ncol.note_string   = note_str
       ncol.volume_string = "7F"
@@ -100,7 +95,8 @@ function M.write_tremolo(instrument, note, speed, depth, lpb, phrase_len, loopin
     local efx  = line:effect_column(ecol)
     efx.number_string = "0T"
     efx.amount_string = effect_str
-    if i == 1 and line:note_column(1).note_string == "---" then
+    -- Write trigger note on line 1 (phrase is always fresh/empty)
+    if i == 1 then
       local ncol = line:note_column(1)
       ncol.note_string   = note_str
       ncol.volume_string = "7F"
@@ -123,7 +119,8 @@ function M.write_autopan(instrument, note, speed, depth, lpb, phrase_len, loopin
     local efx  = line:effect_column(ecol)
     efx.number_string = "0N"
     efx.amount_string = effect_str
-    if i == 1 and line:note_column(1).note_string == "---" then
+    -- Write trigger note on line 1 (phrase is always fresh/empty)
+    if i == 1 then
       local ncol = line:note_column(1)
       ncol.note_string   = note_str
       ncol.volume_string = "7F"

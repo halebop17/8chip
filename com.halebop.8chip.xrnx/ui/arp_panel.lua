@@ -426,7 +426,8 @@ function create_arp_panel(vb)
         prefs.arp_octave_span.value,
         prefs.arp_pattern.value,
         LPB_VALUES[prefs.arp_lpb.value],
-        prefs.arp_loop.value
+        prefs.arp_loop.value,
+        true  -- reuse_phrase: live mode overwrites, does not accumulate
       )
     end)
   end

@@ -5,8 +5,8 @@
 renoise.tool().preferences = renoise.Document.create("ChiptuneToolboxPrefs") {
 
   -- Waveform Studio
-  waveform_type    = 1,    -- 1=Sine 2=Square 3=Pulse 4=Sawtooth 5=Triangle 6=Noise 7=FM
-  duty_pct         = 50,   -- integer 5..95 (duty cycle %)
+  waveform_type    = 1,    -- 1=Sine 2=Pulse 3=Square(50%) 4=Sawtooth 5=Triangle 6=Noise 7=FM
+  duty_pct         = 25,   -- integer 5..95 (duty cycle %)
   fm_ratio_x10     = 20,   -- integer 5..160 (op ratio * 10, e.g. 20 = 2.0)
   fm_mod_x10       = 10,   -- integer 0..100 (mod index * 10, e.g. 10 = 1.0)
   sample_rate_idx  = 4,    -- 1=8000 2=11025 3=22050 4=44100

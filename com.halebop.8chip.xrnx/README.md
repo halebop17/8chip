@@ -1,0 +1,114 @@
+# 8chip — Renoise Chiptune Toolbox
+
+7 modules for chiptune composition. **Requires Renoise 3.5+**
+
+Open via **Tools → 8chip** or the assigned keybinding.
+
+Most important things below, for full length manual, go to [https://github.com/halebop17/8chip](https://github.com/halebop17/8chip)
+
+---
+
+## Tabs
+
+### 1. Waveforms
+Generates a mathematical waveform into the selected instrument's sample slot.
+
+| Type | Description |
+|------|-------------|
+| Sine | Pure sine |
+| Pulse | Variable duty (default 25%) — adjust with Duty slider |
+| Square (50%) | Fixed 50% duty square |
+| Sawtooth | Bright saw |
+| Triangle | Smooth triangle |
+| Noise | White noise |
+| FM | Two-operator FM |
+
+Controls: Waveform, Frames (cycle length), Duty % (Pulse only), FM Ratio/Mod (FM only), Sample Rate, Bit Depth, Loop Mode, Preview, Generate.
+
+---
+
+### 2. Presets
+Browse and load chip instrument presets. Sources: real NES APU recordings, Genesis YM2612 samples, or mathematical waveforms for GB/C64.
+
+- **Preview** — audition the preset
+- **Load Preset** — adds instrument to selected slot
+- **Load Full Kit** — adds all presets in category as separate slots (`[ch.XX]` naming for phrase routing)
+
+**Optional C64 samples:** Download BPB C64 Synth Sessions Parts 1 & 2 (free, royalty-free) and copy the instrument subfolders into `data/c64_samples/`. The tool detects them automatically.
+
+[BPB C64 Synth Sessions Part 1](https://bedroomproducersblog.com/2012/03/13/commodore-64-synthesizer-sessions-part-1-free-sample-pack/)   
+[BPB C64 Synth Sessions Part 2](https://bedroomproducersblog.com/2012/04/03/commodore-64-synthesizer-sessions-part-2-free-sample-pack/)
+
+---
+
+### 3. Arp
+Writes arpeggio phrases into the selected instrument. Always creates a **new phrase**.
+
+| Mode | Description |
+|------|-------------|
+| Hardware (0A) | `0A XY` effect — most hardware-authentic |
+| Explicit | Each chord note on its own line |
+| Script (pattrns) | Lua script phrase, algorithmic, live-tweakable (Renoise 3.5+) |
+
+Controls: Mode, Root Note, Chord, Octave Span (1–3), Pattern (Asc/Desc/Ping-Pong/Down-Up/Skip/Random), LPB, Length, Loop, Preview, Write Phrase.
+
+**Live Mode** *(Script only):* Any change to Root, Chord, Pattern, Octave, LPB, or Loop instantly rewrites the current script phrase — no Write click needed. Overwrites the selected phrase rather than creating a new one. Disable before switching to a different phrase.
+
+---
+
+### 4. Pitch
+Writes pitch effect commands into a new phrase on the selected instrument.
+
+| Preset | Effect | Character |
+|--------|--------|-----------|
+| Laser Zap | `0U` rise over N lines + `0C` cut | Upward sweep then silence |
+| Kick Drop | `0D` descent | Pitch-drop drum |
+| Bass Glide | `0G` portamento | Smooth glide between two notes |
+| Portamento Bass | Root/fifth pattern + `0G` | Walking bass with continuous glide |
+
+Controls: Preset, Note/Root, Target Note (Glide only), Speed, Sweep Lines, LPB, Length, Loop, Preview, Write Phrase.
+
+---
+
+### 5. Drums
+Percussion phrases using volume step-fades and effect commands. Works on any instrument — noise or sine work best. Always creates a **new phrase**.
+
+| Preset | Effects | Character |
+|--------|---------|-----------|
+| Kick | Volume step-fade + `0C` cut | Linear decay, hard cut |
+| Snare | `0R` retrigger burst + `0C` | Rapid retrigger snap |
+| Hi-Hat | Short `0C` per line | Tight tick; add `0Y` for shuffle |
+| Noise Burst | Volume step-fade + `0C` cut | Shaped noise decay |
+
+Controls: Preset, Note, Decay Lines (Kick/Noise), Retriggers (Snare), Cut Tick (Hi-Hat), Probability % (Hi-Hat), LPB, Length, Loop, Preview, Write Phrase.
+
+---
+
+### 6. Mod
+Injects vibrato (`0V`), tremolo (`0T`), or auto-pan (`0N`) into a phrase or pattern region.
+
+**Target — New Phrase:** creates a new phrase, writes effects on every line, adds a sustained trigger note on line 1.  
+**Target — Pattern Region:** injects effects only onto lines that already have a note — does not write or remove notes.
+
+Controls: Quick Preset, Effect, Speed (0–15), Depth (0–15), Note, LPB, Length, Loop, Target, Preview, Write/Inject.
+
+---
+
+### 7. Probability
+Applies `0Y` (probability) and `0Q` (delay) to notes in the **selected pattern region**. Select notes in the pattern editor first.
+
+| Tool | What it does |
+|------|-------------|
+| Probability Scatter | Adds `0Y` to selected notes at the given density |
+| Humanize | Scatters small `0Q` delay values for a loose feel |
+| Fill (Every Nth) | Marks every Nth note with `0Y` |
+
+---
+
+## Tips
+
+- **Phrase LPB vs song LPB:** Phrases have their own LPB. High phrase LPB (32–64) = ultra-fast chip arps at any song tempo.
+- **Kit routing:** Trigger the phrase-holder slot in your pattern. Use the instrument column inside the phrase to route lines to different sound slots.
+- **Every Write creates a new phrase** (except Arp Live Mode). Use Undo (`Ctrl+Z`) if you write by mistake.
+- **Combining Arp + Mod:** Use Mod's **Pattern Region** target to inject effects onto existing arp notes without creating a separate phrase.
+- **Safe combinations:** Pitch + Mod ✓ — Arp + Pitch slide ✓ — Arp + Tremolo/Auto-Pan ✓ — **Arp + Vibrato ✗** (both modify pitch, unpredictable results).

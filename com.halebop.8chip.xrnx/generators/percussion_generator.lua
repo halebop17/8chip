@@ -1,10 +1,10 @@
 -- generators/percussion_generator.lua
 -- Module 5: Percussion Shaper
 -- Writes effect-driven percussion phrases.
--- Kick:       0O fade-out + 0C cut  (pitched noise or triangle)
+-- Kick:       volume step-fade + 0C cut  (pitched noise or triangle)
 -- Snare:      0R retrigger burst
 -- Hi-hat:     0C very short cut + optional 0Y probability
--- Noise burst: 0O shaped decay
+-- Noise burst: volume step-fade decay
 
 local M = {}
 
@@ -20,16 +20,10 @@ local function note_to_string(midi_note)
 end
 
 local function get_or_create_phrase(instrument, lpb, phrase_len, looping)
-  if #instrument.phrases == 0 then
-    instrument:insert_phrase_at(1)
-  end
-  local idx = renoise.song().selected_phrase_index
-  local phrase
-  if idx and idx >= 1 and idx <= #instrument.phrases then
-    phrase = instrument.phrases[idx]
-  else
-    phrase = instrument.phrases[1]
-  end
+  local new_idx = #instrument.phrases + 1
+  instrument:insert_phrase_at(new_idx)
+  renoise.song().selected_phrase_index = new_idx
+  local phrase = instrument.phrases[new_idx]
   phrase.number_of_lines = phrase_len
   phrase.lpb = lpb
   phrase.looping = looping
@@ -39,27 +33,24 @@ local function get_or_create_phrase(instrument, lpb, phrase_len, looping)
   return phrase
 end
 
--- Kick: strike on line 1, fade down with 0O, cut at decay_lines.
--- Use a low note (pitched triangle/pulse) for the "thump".
+-- Kick: strike with volume fade-out over decay_lines by retriggering
+-- with decreasing volume, then cutting.
 function M.write_kick(instrument, note, decay_lines, lpb, phrase_len, looping)
   local phrase = get_or_create_phrase(instrument, lpb, phrase_len, looping)
-
-  -- Fade speed: spread decay across decay_lines
-  local fade_amount = math.max(1, math.floor(255 / math.max(1, decay_lines)))
+  decay_lines = math.min(decay_lines, phrase_len - 1)  -- ensure cut line fits
 
   for i = 1, phrase_len do
-    local line  = phrase:line(i)
+    local line = phrase:line(i)
     line:clear()
-    if i == 1 then
+    if i <= decay_lines then
+      local vol = math.max(1, math.floor(0x80 * (decay_lines - i + 1) / decay_lines))
       local ncol = line:note_column(1)
-      local efx1 = line:effect_column(1)
-      local efx2 = line:effect_column(2)
       ncol.note_string   = note_to_string(note)
-      ncol.volume_string = "80"       -- loud strike
-      efx1.number_string = "0O"       -- fade out
-      efx1.amount_string = hex2(fade_amount)
-      efx2.number_string = "0C"
-      efx2.amount_string = hex2(decay_lines)
+      ncol.volume_string = hex2(vol)
+    elseif i == decay_lines + 1 then
+      local efx = line:effect_column(1)
+      efx.number_string = "0C"
+      efx.amount_string = "00"
     end
   end
 end
@@ -118,26 +109,23 @@ function M.write_hihat(instrument, note, cut_tick, probability, lpb, phrase_len,
   end
 end
 
--- Noise burst: single hit with 0O decay shaping each write.
--- decay_lines: lines until silence; spread over phrase for variation.
+-- Noise burst: single hit with volume fade-out over decay_lines.
 function M.write_noise_burst(instrument, note, decay_lines, lpb, phrase_len, looping)
   local phrase = get_or_create_phrase(instrument, lpb, phrase_len, looping)
-
-  local fade_amount = math.max(1, math.floor(255 / math.max(1, decay_lines)))
+  decay_lines = math.min(decay_lines, phrase_len - 1)  -- ensure cut line fits
 
   for i = 1, phrase_len do
     local line = phrase:line(i)
     line:clear()
-    if i == 1 then
+    if i <= decay_lines then
+      local vol = math.max(1, math.floor(0x7F * (decay_lines - i + 1) / decay_lines))
       local ncol = line:note_column(1)
-      local efx1 = line:effect_column(1)
-      local efx2 = line:effect_column(2)
       ncol.note_string   = note_to_string(note)
-      ncol.volume_string = "7F"
-      efx1.number_string = "0O"
-      efx1.amount_string = hex2(fade_amount)
-      efx2.number_string = "0C"
-      efx2.amount_string = hex2(decay_lines)
+      ncol.volume_string = hex2(vol)
+    elseif i == decay_lines + 1 then
+      local efx = line:effect_column(1)
+      efx.number_string = "0C"
+      efx.amount_string = "00"
     end
   end
 end

@@ -104,7 +104,7 @@ function create_percussion_panel(vb)
 
     vb:text { text = "Percussion Shaper", font = "bold", style = "strong" },
     vb:text {
-      text  = "Writes effect-driven percussion patterns (0O fade, 0C cut, 0R retrigger, 0Y probability).",
+      text  = "Writes effect-driven percussion patterns (volume fade, 0C cut, 0R retrigger, 0Y probability).",
       style = "disabled",
     },
 

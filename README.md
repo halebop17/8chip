@@ -26,8 +26,8 @@ Generates a mathematical waveform and writes it directly into the selected instr
 | Type | Description |
 |------|-------------|
 | Sine | Pure sine — smooth, warm |
-| Square (50%) | Hard 50% duty square — NES/GB pulse character |
-| Pulse | Variable duty cycle — set width with the Duty slider |
+| Pulse | Variable duty cycle — set width with the Duty slider (default 25%) |
+| Square (50%) | Hard 50% duty square — NES/GB pulse character, fixed duty |
 | Sawtooth | Full-spectrum bright saw — SID/Genesis lead character |
 | Triangle | Smooth triangle — NES bass, GB wave channel feel |
 | Noise | White noise — drums, percussion |
@@ -36,7 +36,7 @@ Generates a mathematical waveform and writes it directly into the selected instr
 **Controls:**
 - **Waveform** — type selector
 - **Frames** — number of samples per cycle (32–4096); shorter = more aliased/lo-fi
-- **Duty %** — pulse width, active for Pulse type only
+- **Duty %** — pulse width, active for Pulse type only (default 25%)
 - **FM Ratio / FM Mod** — operator ratio and modulation index, active for FM only
 - **Sample Rate** — 8000 Hz (lo-fi) / 11025 / 22050 / 44100 Hz (full quality)
 - **Bit Depth** — 8 / 16 / 32-bit
@@ -119,7 +119,8 @@ Writes arpeggio patterns into a phrase on the selected instrument. Three modes a
 - **Length** — total phrase length in lines
 - **Loop** — whether the phrase loops
 - **▶ Preview** — synthesises the arp as a square-wave audio buffer and plays it
-- **Write to Phrase** — writes the arp into the selected instrument's phrase slot
+- **Write to Phrase** — writes the arp into a **new** phrase on the selected instrument
+- **Live Mode** *(Script mode only)* — checkbox that makes any change to Root, Chord, Pattern, Octave, LPB or Loop instantly re-write the current script phrase. Useful for real-time performance or auditioning chord changes without clicking Write each time. Live Mode always overwrites the currently selected phrase rather than creating a new one — disable it before switching to a different phrase.
 
 **Chord reference:**
 | Chord | Intervals (semitones) |
@@ -138,7 +139,9 @@ Writes arpeggio patterns into a phrase on the selected instrument. Three modes a
 
 > **About the preview:** The arp preview synthesises a square-wave audio buffer — it always sounds like a square wave regardless of the instrument. This is by design; the arp generator produces phrase data, not audio. The preview lets you hear the rhythm and note pattern, not the final timbre.
 
-> **About Script mode:** Script phrases require the `pattrns` scripting engine built into Renoise 3.5. The written script is a live Lua expression that Renoise re-evaluates on playback.
+> **About Script mode:** Script phrases require the `pattrns` scripting engine built into Renoise 3.5. The written script is a live Lua expression that Renoise re-evaluates on playback. On pre-3.5 builds, Script mode automatically falls back to Explicit mode.
+
+> **New phrase behaviour:** Every click of Write Phrase (on Arp, Pitch, Drums, and Mod tabs) always inserts a **new** phrase rather than overwriting the selected one. This prevents accidental destruction of existing phrase data. The only exception is Arp Live Mode, which intentionally overwrites the current phrase for real-time use.
 
 ---
 
@@ -169,15 +172,17 @@ Writes pitch effect commands (`0U` slide up, `0D` slide down, `0G` portamento) i
 
 ### 5. Drums
 
-Builds percussion-style phrases using Renoise volume and amplitude effect commands. Works on top of any instrument — noise or sine work best.
+Builds percussion-style phrases using note re-trigger volume fades and Renoise effect commands. Works on top of any instrument — noise or sine work best.
 
 **Presets:**
 | Preset | Effects used | Character |
-|--------|-------------|-----------|
-| Kick | `0O` (fade) + `0C` (cut) | Fast amplitude decay, pitch-cut |
-| Snare | `0R` (retrigger) burst + volume ramp | Mid-range snap with retrigger |
-| Hi-Hat | Very short `0C` | Ultra-short tick; add `0Y` probability for shuffle feel |
-| Noise Burst | Shaped `0O` decay | Decay-shaped noise envelope |
+|--------|-------------|----------|
+| Kick | Volume step-fade over N lines + `0C` cut | Linear amplitude decay, hard cut at end |
+| Snare | `0R` retrigger burst + `0C` cut | Mid-range snap with rapid retrigger echoes |
+| Hi-Hat | Very short `0C` per line | Ultra-short tick on every line; add `0Y` probability for shuffle feel |
+| Noise Burst | Volume step-fade over N lines + `0C` cut | Decay-shaped noise envelope |
+
+> **How Kick and Noise Burst work:** The phrase retriggers the note on each of the `Decay Lines` with a linearly decreasing volume (e.g. 4 lines: 80% → 60% → 40% → 20%), then fires `0C 00` on the next line to cut. This is standard tracker decay technique — you will see multiple note triggers in the phrase.
 
 **Controls:**
 - **Preset** — type selector
@@ -218,11 +223,15 @@ Injects vibrato (`0V`), tremolo (`0T`), or auto-pan (`0N`) effect commands into 
 - **LPB** — phrase lines per beat
 - **Length** — total phrase length
 - **Loop** — whether the phrase loops
-- **Target** — Phrase (new phrase on selected instrument) or Pattern Region (selected notes in current pattern)
+- **Target** — **New Phrase** (creates a new phrase on the selected instrument, writing effects and a sustained trigger note on line 1) or **Pattern Region** (injects effects onto lines that already have a note trigger in the selected pattern region — does not write or remove notes)
 - **▶ Preview** — plays a modulated note preview
 - **Inject** — writes effect commands to the target
 
 > **Effect encoding:** `0V XY` where X = speed nibble (0–F) and Y = depth nibble (0–F). Same encoding for `0T` and `0N`.
+
+> **New Phrase target:** always inserts a fresh phrase with the effect written on every line and a sustained trigger note on line 1. The trigger note is written unconditionally since the phrase is always empty on creation.
+
+> **Pattern Region target:** scans the selected region for lines that already have a note trigger and injects the effect command there, leaving note columns untouched.
 
 ---
 
@@ -253,7 +262,7 @@ Applies `0Y` (probability) and `0Q` (note delay) effect commands to notes in the
 - **Phrase LPB vs song LPB:** Phrases have their own LPB setting independent of the song. High phrase LPB (32–64) gives ultra-fast chip arps even at a slow song tempo.
 - **Kit routing:** When loading a Full Kit, trigger the phrase-holder slot in your pattern. The phrase's instrument column values reference which sound slot plays on each line. Use the instrument column in the phrase editor to route individual lines to different sounds.
 - **Layering presets:** Load multiple presets then route them via the pattern's instrument column for multi-timbral chip tracks.
-- **Layering Arp / Pitch / Mod on the same phrase:** Each tab detects occupied effect columns and writes to the next free lane automatically — so you can apply them in sequence without overwriting. The safe rule: **Pitch + Mod is always safe. Arp + Pitch slide is safe. Arp + Vibrato is the one to avoid** — both fight over pitch simultaneously and produce unpredictable results. Arp + Tremolo/Auto-Pan is fine since those affect volume and stereo position, not pitch.
+- **Layering Arp / Pitch / Mod on the same phrase:** Each tab always creates a new phrase, so they do not overwrite each other. To combine Arp + Mod on a single phrase: write the arp first, then use Mod's **Pattern Region** target (not New Phrase) to inject modulation effects onto the existing arp notes. Alternatively, layer two separate phrases on the same instrument — one for arp notes, one for mod effects. The safe rule: **Pitch + Mod is always safe. Arp + Pitch slide is safe. Arp + Vibrato is the one to avoid** — both fight over pitch simultaneously and produce unpredictable results. Arp + Tremolo/Auto-Pan is fine since those affect volume and stereo position, not pitch.
 - **Math + effects:** The math presets (C64, Genesis) are designed to be starting points. Apply the Arp, Pitch, Mod, and Drums tabs on top to add authentic chip character.
 - **Genesis FM in Waveforms tab:** The Waveforms tab FM generator still works independently. Low mod index (0.3–1.0) = electric piano / organ. High ratio (7.0+) = metallic / bell. Extreme mod index (4.0+) = distorted bass. The Genesis presets in the Presets tab use bundled samples.
 
@@ -271,7 +280,6 @@ Applies `0Y` (probability) and `0Q` (note delay) effect commands to notes in the
 | `0T XY` | Tremolo | X = speed, Y = depth |
 | `0N XY` | Auto-pan | X = speed, Y = depth |
 | `0C XX` | Volume cut | XX = tick at which volume cuts to zero |
-| `0O XX` | Fade out | XX = fade speed |
 | `0R XX` | Retrigger | XX = retrigger period in ticks |
 | `0Y XX` | Probability | 00 = never, 80 = 50%, FF = always |
 | `0Q XX` | Note delay | XX = ticks to delay note on |

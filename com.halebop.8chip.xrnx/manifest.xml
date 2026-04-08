@@ -4,6 +4,6 @@
   <Name>8chip</Name>
   <Version>0.1.0</Version>
   <Author>halebop</Author>
-  <Description>A composing toolbox for 8-bit and 16-bit style chiptunes. Generates waveforms, arpeggios, presets, and chiptune effects directly inside Renoise.</Description>
+  <Description>A composing toolbox for 8-bit/16-bit style chiptunes. Generate waveforms, arpeggios, and chiptune FX.</Description>
   <ApiVersion>6</ApiVersion>
 </RenoiseScriptingTool>
