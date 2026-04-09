@@ -5,6 +5,8 @@
 Open via **Tools → 8chip** or the assigned keybinding.
 
 Most important things below, for full length manual, go to [https://github.com/halebop17/8chip](https://github.com/halebop17/8chip)
+Credit to Adventure Kid for his single cycle waveforms of which some are included in 8chip.
+https://www.adventurekid.se/akrt/waveforms/
 
 ---
 
