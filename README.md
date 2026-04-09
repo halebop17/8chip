@@ -2,7 +2,7 @@
 
 A Renoise `.xrnx` tool with 8 modules for chiptune composition: waveform generation, console instrument presets, single-cycle browsing/wavetable staging, arp/phrase generation, pitch effects, percussion shaping, modulation injection, and probability tools.
 
-**Requires:** Renoise 3.5+
+**Requires:** Renoise 3.5+   
 Credit to Adventure Kid for his single cycle waveforms of which some are included in 8chip.
 https://www.adventurekid.se/akrt/waveforms/
 
