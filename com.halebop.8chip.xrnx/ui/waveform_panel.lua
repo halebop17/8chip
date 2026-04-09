@@ -3,6 +3,7 @@
 -- Generates mathematical waveforms into the selected instrument's sample slot.
 
 local gen = require("waveforms.generators")
+local CW  = require("ui.canvas_wave")
 
 local WAVEFORM_NAMES = {
   "Sine", "Pulse", "Square (50%)", "Sawtooth", "Triangle", "Noise", "FM"
@@ -79,6 +80,15 @@ function create_waveform_panel(vb)
     prefs.loop_mode_idx.value = 1
   end
 
+  -- Canvas view reference (set after panel construction)
+  local canvas_view = nil
+
+  local function refresh_canvas()
+    if canvas_view then
+      CW.set_data(canvas_view, build_frames(prefs))
+    end
+  end
+
   -- Track which rows need show/hide based on waveform type
   local function refresh_visibility()
     local t        = prefs.waveform_type.value
@@ -86,6 +96,7 @@ function create_waveform_panel(vb)
     local is_fm    = (t == 7)
     vb.views["wf_duty_row"].visible = is_pulse
     vb.views["wf_fm_row"].visible   = is_fm
+    refresh_canvas()
   end
 
   -- Generate frames and write into instrument slot 1
@@ -179,7 +190,7 @@ function create_waveform_panel(vb)
       visible = (prefs.waveform_type.value == 2),
       spacing = 8,
       vb:text { text = "Duty Cycle", width = 90 },
-      vb:slider {
+      vb:minislider {
         id    = "wf_duty_slider",
         width = 160,
         min   = 5,
@@ -188,6 +199,7 @@ function create_waveform_panel(vb)
         notifier = function(v)
           prefs.duty_pct.value = math.floor(v)
           vb.views["wf_duty_label"].text = tostring(math.floor(v)) .. "%"
+          refresh_canvas()
         end,
       },
       vb:text { id = "wf_duty_label", text = prefs.duty_pct.value .. "%" },
@@ -211,6 +223,7 @@ function create_waveform_panel(vb)
             prefs.fm_ratio_x10.value = math.floor(v)
             vb.views["wf_fm_ratio_label"].text =
               string.format("%.1f", math.floor(v) / 10.0)
+            refresh_canvas()
           end,
         },
         vb:text {
@@ -232,6 +245,7 @@ function create_waveform_panel(vb)
             prefs.fm_mod_x10.value = math.floor(v)
             vb.views["wf_fm_mod_label"].text =
               string.format("%.1f", math.floor(v) / 10.0)
+            refresh_canvas()
           end,
         },
         vb:text {
@@ -314,12 +328,18 @@ function create_waveform_panel(vb)
       vb:button {
         text   = "Preview",
         width  = 110,
-        notifier = do_preview,
+        notifier = function()
+          do_preview()
+          refresh_canvas()
+        end,
       },
       vb:button {
         text   = "Generate into Selected Instrument",
         width  = 260,
-        notifier = do_generate,
+        notifier = function()
+          do_generate()
+          refresh_canvas()
+        end,
       },
     },
 
@@ -329,59 +349,18 @@ function create_waveform_panel(vb)
     },
 
     -- -----------------------------------------------------------------------
-    -- NES Authentic Samples section
-    -- Loads real APU recordings bundled in data/nes_samples/.
+    -- Waveform preview canvas
     -- -----------------------------------------------------------------------
-    vb:space { height = 10 },
-    vb:text { text = "NES Authentic Samples", font = "bold", style = "strong" },
-    vb:text {
-      text  = "Load actual single-cycle waveforms recorded from NES APU hardware.\n"
-           .. "These replace the math generator and set the correct loop + base note.",
-      style = "disabled",
-    },
-    vb:space { height = 4 },
-
-    vb:row {
-      spacing = 8,
-      vb:text { text = "Waveform", width = 90 },
-      vb:popup {
-        id    = "wf_nes_chooser",
-        width = 200,
-        items = {
-          "Square (50% duty)",
-          "Pulse 25%",
-          "Pulse 12.5%  (thinnest)",
-          "Triangle (staircase)",
-          "Noise (LFSR loop)",
-        },
-        value = 1,
-      },
-    },
-    vb:row {
-      spacing = 8,
-      vb:button {
-        text  = "Load NES Sample into Selected Instrument",
-        width = 300,
-        notifier = function()
-          local song  = renoise.song()
-          local instr = song.selected_instrument
-          if not instr then
-            renoise.app():show_error("8chip: No instrument selected.")
-            return
-          end
-          local NES_KEYS = {
-            "nes_square", "nes_pulse_25", "nes_pulse_12",
-            "nes_triangle", "nes_noise",
-          }
-          local idx = vb.views["wf_nes_chooser"].value
-          local key = NES_KEYS[idx]
-          if gen.load_nes_sample(instr, key) then
-            renoise.app():show_status("8chip: NES authentic sample loaded.")
-          end
-        end,
-      },
-    },
+    vb:space { height = 8 },
   }
+
+  -- Create canvas and append it to the panel after the panel exists,
+  -- so canvas_view is set before any notifier fires.
+  canvas_view = CW.create(vb, W, 80)
+  panel:add_child(canvas_view)
+
+  -- Draw initial waveform for current prefs
+  refresh_canvas()
 
   return panel
 end

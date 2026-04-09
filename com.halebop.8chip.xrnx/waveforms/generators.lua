@@ -282,4 +282,53 @@ function M.load_genesis_sample(instrument, waveform_key, sample_name)
   return true
 end
 
+-- ---------------------------------------------------------------------------
+-- Chip Authentic Sample loader
+-- Loads one of the bundled Halebop single-cycle WAV files (GB / SID) into
+-- instrument slot 1.
+--
+-- waveform_key must be one of:
+--   "chip_gb_wave_saw"      → gb_wave_saw.wav
+--   "chip_gb_wave_triangle" → gb_wave_triangle.wav
+--   "chip_sid_sawtooth"     → sid_sawtooth.wav
+--   "chip_sid_triangle"     → sid_triangle.wav
+--   "chip_sid_pulse_25"     → sid_pulse_25.wav
+--   "chip_sid_pulse_50"     → sid_pulse_50.wav
+-- ---------------------------------------------------------------------------
+
+local CHIP_SAMPLE_FILES = {
+  chip_gb_wave_saw      = "gb_wave_saw.wav",
+  chip_gb_wave_triangle = "gb_wave_triangle.wav",
+  chip_sid_sawtooth     = "sid_sawtooth.wav",
+  chip_sid_triangle     = "sid_triangle.wav",
+  chip_sid_pulse_25     = "sid_pulse_25.wav",
+  chip_sid_pulse_50     = "sid_pulse_50.wav",
+}
+
+function M.load_chip_sample(instrument, waveform_key, sample_name)
+  local filename = CHIP_SAMPLE_FILES[waveform_key]
+  if not filename then
+    renoise.app():show_error("8chip: Unknown chip waveform key: " .. tostring(waveform_key))
+    return false
+  end
+
+  local path = renoise.tool().bundle_path .. "data/chip_samples/" .. filename
+
+  M.ensure_sample_slot(instrument)
+  local sample  = instrument.samples[1]
+  sample.name   = sample_name or waveform_key
+
+  local buf      = sample.sample_buffer
+  local ok, err  = buf:load_from(path)
+  if not ok then
+    renoise.app():show_error("8chip: Could not load chip sample.\n" .. tostring(err))
+    return false
+  end
+
+  sample.loop_mode  = renoise.Sample.LOOP_MODE_FORWARD
+  sample.loop_start = 1
+  sample.loop_end   = buf.number_of_frames
+  return true
+end
+
 return M

@@ -23,4 +23,8 @@ renoise.tool().preferences = renoise.Document.create("ChiptuneToolboxPrefs") {
   arp_lpb          = 4,    -- index into LPB_VALUES table {4,8,12,16,24,32,48,64}
   arp_phrase_len   = 2,    -- index into PHRASE_LENS table {8,16,24,32,48,64}
   arp_loop         = true,
+
+  -- Single Cycle Browser
+  scw_library_path = "",   -- absolute path to the WAV library root folder
+  scw_last_bank    = "",   -- last selected bank name (restored on open)
 }

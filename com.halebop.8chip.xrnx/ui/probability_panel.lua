@@ -91,7 +91,7 @@ function create_probability_panel(vb)
       vb:row {
         spacing = 8,
         vb:text { text = "Density", width = 90 },
-        vb:slider {
+        vb:minislider {
           id    = "prob_density_slider",
           width = 180,
           min   = 0,
@@ -109,7 +109,7 @@ function create_probability_panel(vb)
       vb:row {
         spacing = 8,
         vb:text { text = "Prob chance", width = 90 },
-        vb:slider {
+        vb:minislider {
           id    = "prob_val_slider",
           width = 180,
           min   = 0,
@@ -146,7 +146,7 @@ function create_probability_panel(vb)
       vb:row {
         spacing = 8,
         vb:text { text = "Density", width = 90 },
-        vb:slider {
+        vb:minislider {
           id    = "prob_human_density",
           width = 180,
           min   = 0,
@@ -205,7 +205,7 @@ function create_probability_panel(vb)
       vb:row {
         spacing = 8,
         vb:text { text = "Chance (0Y)", width = 90 },
-        vb:slider {
+        vb:minislider {
           id    = "prob_fill_chance",
           width = 180,
           min   = 0,

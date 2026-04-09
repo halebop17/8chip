@@ -275,7 +275,7 @@ function create_pitch_panel(vb)
     vb:row {
       spacing = 8,
       vb:text { text = "Speed (Sweep Rate)", width = 130 },
-      vb:slider {
+      vb:minislider {
         id    = "pitch_speed_slider",
         width = 160,
         min   = 1,

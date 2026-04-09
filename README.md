@@ -1,6 +1,6 @@
 # 8chip — Renoise Chiptune Toolbox
 
-A Renoise `.xrnx` tool with 7 modules for chiptune composition: waveform generation, console instrument presets, arp/phrase generation, pitch effects, percussion shaping, modulation injection, and probability tools.
+A Renoise `.xrnx` tool with 8 modules for chiptune composition: waveform generation, console instrument presets, single-cycle browsing/wavetable staging, arp/phrase generation, pitch effects, percussion shaping, modulation injection, and probability tools.
 
 **Requires:** Renoise 3.5+
 
@@ -17,6 +17,8 @@ A Renoise `.xrnx` tool with 7 modules for chiptune composition: waveform generat
 ---
 
 ## Tabs
+
+The UI uses a 2-row top menu (4 tabs per row).
 
 ### 1. Waveforms
 
@@ -62,7 +64,7 @@ Browse and load authentic chip instrument presets. Each preset either loads a re
 - **Console** — dropdown to select category
 - **Preset** — dropdown listing all presets in the selected category
 - **Description** — brief description of the selected preset
-- **Preview** — generates the waveform into the selected instrument and plays it
+- **Preview** — non-destructive audition (uses a temporary instrument, then removes it)
 - **Load Preset** — adds a new instrument slot with the selected preset
 - **Load Full Kit** — adds all presets in the category as separate instrument slots, with a naming convention (`[ch.XX]`) for phrase routing
 
@@ -257,6 +259,27 @@ Applies `0Y` (probability) and `0Q` (note delay) effect commands to notes in the
 
 ---
 
+### 8. Single Cycles
+
+Browse internal Adventure Kid waveform selections or any custom WAV folder, preview waveforms, insert one-shots, or build staged 4-slot wavetables.
+
+**Core workflow:**
+- **Use Internal** — resets to bundled curated AKWF banks included with the tool
+- **Browse** — choose your own folder (each subfolder becomes a bank)
+- **Bank** — select a waveform bank
+- **Waveform** — choose a waveform in that bank
+- **Insert Single** — inserts selected waveform directly as a looped sample
+- **+ Add to Wavetable** — stages current waveform into queue (max 4)
+- **WAVETABLE QUEUE** — staged filenames listed vertically
+- **Insert as Wavetable** — inserts queued waveforms and auto-spreads keyzones across C0-B9
+
+**Notes:**
+- Canvas preview is full-width and updates on waveform selection.
+- Internal curated library is in `data/bundled_waves/`.
+- Internal banks include a broad selection (sine, saw, square, triangle, chip, game, FM, organic).
+
+---
+
 ## Tips
 
 - **Phrase LPB vs song LPB:** Phrases have their own LPB setting independent of the song. High phrase LPB (32–64) gives ultra-fast chip arps even at a slow song tempo.
@@ -323,6 +346,23 @@ These are stored in `data/genesis_samples/` inside the tool bundle.
 
 ---
 
+## Bundled Chip Samples
+
+Additional hardware-style single-cycle files are bundled for GB wave-channel and SID presets:
+
+| File | Used by presets |
+|------|------------------|
+| `gb_wave_saw.wav` | `chip_gb_wave_saw` |
+| `gb_wave_triangle.wav` | `chip_gb_wave_triangle` |
+| `sid_sawtooth.wav` | `chip_sid_sawtooth` |
+| `sid_triangle.wav` | `chip_sid_triangle` |
+| `sid_pulse_25.wav` | `chip_sid_pulse_25` |
+| `sid_pulse_50.wav` | `chip_sid_pulse_50` |
+
+Stored in `data/chip_samples/`.
+
+---
+
 ## File Structure
 
 ```
@@ -332,9 +372,10 @@ com.halebop.8chip.xrnx/
 ├── preferences.lua               ← persistent settings
 ├── data/
 │   ├── chords.lua                ← chord interval tables
+│   ├── bundled_waves/            ← curated internal AKWF wave banks
+│   ├── chip_samples/             ← bundled GB/SID single-cycle WAVs
 │   ├── nes_samples/              ← bundled NES APU recordings (CC0)
-│   ├── c64_samples/              ← optional BPB SID samples (user-installed)
-│   ├── genesis_samples/       ← bundled Genesis YM2612 WAV samples
+│   ├── genesis_samples/          ← bundled Genesis YM2612 WAV samples
 │   └── presets/
 │       ├── nes.lua
 │       ├── gameboy.lua
@@ -349,8 +390,10 @@ com.halebop.8chip.xrnx/
 │   └── modulation_generator.lua
 └── ui/
     ├── dialog.lua
+   ├── canvas_wave.lua
     ├── waveform_panel.lua
     ├── presets_panel.lua
+   ├── singlecycle_panel.lua
     ├── arp_panel.lua
     ├── pitch_panel.lua
     ├── percussion_panel.lua

@@ -1,6 +1,6 @@
 # 8chip — Renoise Chiptune Toolbox
 
-7 modules for chiptune composition. **Requires Renoise 3.5+**
+8 modules for chiptune composition. **Requires Renoise 3.5+**
 
 Open via **Tools → 8chip** or the assigned keybinding.
 
@@ -9,6 +9,8 @@ Most important things below, for full length manual, go to [https://github.com/h
 ---
 
 ## Tabs
+
+Top menu is arranged as 2 rows (4 tabs per row).
 
 ### 1. Waveforms
 Generates a mathematical waveform into the selected instrument's sample slot.
@@ -20,16 +22,11 @@ Controls: Waveform, Frames (cycle length), Duty % (Pulse only), FM Ratio/Mod (FM
 ---
 
 ### 2. Presets
-Browse and load chip instrument presets. Sources: real NES APU recordings, Genesis YM2612 samples, or mathematical waveforms for GB/C64.
+Browse and load chip instrument presets. Sources: real NES APU recordings, Genesis YM2612 samples, bundled GB/SID chip single-cycles, or mathematical waveforms.
 
-- **Preview** — audition the preset
-- **Load Preset** — adds instrument to selected slot
+- **Preview** — non-destructive audition (temporary instrument is removed after playback)
+- **Load Preset** — adds a new instrument slot with the selected preset
 - **Load Full Kit** — adds all presets in category as separate slots (`[ch.XX]` naming for phrase routing)
-
-**Optional C64 samples:** Download BPB C64 Synth Sessions Parts 1 & 2 (free, royalty-free) and copy the instrument subfolders into `data/c64_samples/`. The tool detects them automatically.
-
-[BPB C64 Synth Sessions Part 1](https://bedroomproducersblog.com/2012/03/13/commodore-64-synthesizer-sessions-part-1-free-sample-pack/)   
-[BPB C64 Synth Sessions Part 2](https://bedroomproducersblog.com/2012/04/03/commodore-64-synthesizer-sessions-part-2-free-sample-pack/)
 
 ---
 
@@ -90,6 +87,18 @@ Tools:
 - **Probability Scatter** — adds `0Y` to selected notes at a given density
 - **Humanize** — scatters small `0Q` delay values for a loose, human feel
 - **Fill (Every Nth)** — marks every Nth note with `0Y`
+
+---
+
+### 8. Single Cycles
+Browse internal Adventure Kid waveforms or add your own folder.
+
+Core actions:
+- **Use Internal** — load bundled curated AKWF banks
+- **Browse** — pick a custom folder (subfolders become banks)
+- **Insert Single** — insert selected waveform as a looped sample
+- **+ Add to Wavetable** — stage up to 4 waveforms in the queue
+- **Insert as Wavetable** — insert queued waveforms and auto-spread keyzones across C0-B9
 
 ---
 

@@ -3,6 +3,7 @@
 -- Browse, preview, and load chip presets into instrument slots.
 
 local gen = require("waveforms.generators")
+local CW  = require("ui.canvas_wave")
 
 -- ---------------------------------------------------------------------------
 -- Category registry
@@ -47,6 +48,11 @@ local function is_genesis_authentic(waveform)
   return waveform and waveform:sub(1, 8) == "genesis_"
 end
 
+-- Returns true if the preset uses an authentic Halebop chip sample file.
+local function is_chip_authentic(waveform)
+  return waveform and waveform:sub(1, 5) == "chip_"
+end
+
 local function build_frames_from_preset(p)
   local nf = p.num_frames or 256
   if p.waveform == "pulse" then
@@ -82,6 +88,12 @@ local function apply_preset_to_instrument(preset, instrument)
     end
     return
   end
+
+  if is_chip_authentic(preset.waveform) then
+    gen.load_chip_sample(instrument, preset.waveform, preset.name)
+    return
+  end
+
   gen.ensure_sample_slot(instrument)
   local frames = build_frames_from_preset(preset)
   instrument.samples[1].name = preset.name
@@ -95,20 +107,83 @@ local function apply_preset_to_instrument(preset, instrument)
 end
 
 -- ---------------------------------------------------------------------------
+-- Canvas preview helpers
+-- Shape approximations for authentic sample waveforms (avoids loading WAVs
+-- just for display).
+-- ---------------------------------------------------------------------------
+
+local NES_CANVAS_MAP = {
+  nes_square   = function(nf) return gen.generate_square(nf) end,
+  nes_pulse_25 = function(nf) return gen.generate_pulse(nf, 0.25) end,
+  nes_pulse_12 = function(nf) return gen.generate_pulse(nf, 0.125) end,
+  nes_triangle = function(nf) return gen.generate_triangle(nf) end,
+  nes_noise    = function(nf) return gen.generate_noise(nf) end,
+}
+
+local CHIP_CANVAS_MAP = {
+  chip_gb_wave_saw      = function(nf) return gen.generate_sawtooth(nf) end,
+  chip_gb_wave_triangle = function(nf) return gen.generate_triangle(nf) end,
+  chip_sid_sawtooth     = function(nf) return gen.generate_sawtooth(nf) end,
+  chip_sid_triangle     = function(nf) return gen.generate_triangle(nf) end,
+  chip_sid_pulse_25     = function(nf) return gen.generate_pulse(nf, 0.25) end,
+  chip_sid_pulse_50     = function(nf) return gen.generate_square(nf) end,
+}
+
+local function get_canvas_frames(p)
+  local nf = p.num_frames or 256
+  if is_nes_authentic(p.waveform) then
+    local fn = NES_CANVAS_MAP[p.waveform]
+    return fn and fn(nf) or nil
+  elseif is_chip_authentic(p.waveform) then
+    local fn = CHIP_CANVAS_MAP[p.waveform]
+    return fn and fn(nf) or nil
+  elseif is_genesis_authentic(p.waveform) then
+    return gen.generate_sawtooth(nf)
+  elseif p.waveform == "noise" then
+    -- Fixed seed so canvas is stable across multiple calls
+    math.randomseed(12345)
+    return gen.generate_noise(nf)
+  else
+    return build_frames_from_preset(p)
+  end
+end
+
+-- ---------------------------------------------------------------------------
 -- Preview note management
 -- ---------------------------------------------------------------------------
 
 local preview_active = false
 local preview_ctx    = { instr_idx = nil, track_idx = nil }
 
+local function delete_preview_instrument(instr_idx)
+  pcall(function()
+    local song = renoise.song()
+    -- Only delete if it still looks like our temp slot
+    if song.instruments[instr_idx] and
+       song.instruments[instr_idx].name == "8chip Preview [temp]" then
+      song:delete_instrument_at(instr_idx)
+    end
+  end)
+end
+
 local function stop_preset_preview()
   if preview_active and preview_ctx.instr_idx then
+    local idx       = preview_ctx.instr_idx
+    local track_idx = preview_ctx.track_idx
+    -- Send note-off first so the audio engine can process it
     pcall(function()
-      renoise.song():trigger_sample_note_off(
-        preview_ctx.instr_idx, 1, preview_ctx.track_idx, 48)
+      renoise.song():trigger_sample_note_off(idx, 1, track_idx, 48)
     end)
+    -- Delete the temp instrument after a short delay so the release can complete
+    local del_idx = idx
+    local function del_timer()
+      delete_preview_instrument(del_idx)
+      pcall(function() renoise.tool():remove_timer(del_timer) end)
+    end
+    renoise.tool():add_timer(del_timer, 200)
   end
   preview_active = false
+  preview_ctx    = { instr_idx = nil, track_idx = nil }
 end
 
 -- ---------------------------------------------------------------------------
@@ -122,6 +197,20 @@ function create_presets_panel(vb)
   local sel_cat    = 1
   local sel_preset = 1
   local presets    = load_presets(sel_cat)
+
+  -- Canvas preview (set after panel construction)
+  local canvas_view
+  local function refresh_preset_canvas()
+    if not canvas_view then return end
+    local p = presets[sel_preset]
+    if not p then CW.clear(canvas_view) ; return end
+    local frames = get_canvas_frames(p)
+    if frames then
+      CW.set_data(canvas_view, frames)
+    else
+      CW.clear(canvas_view)
+    end
+  end
 
   -- Derive display list (names) from current preset table
   local function preset_names()
@@ -150,28 +239,29 @@ function create_presets_panel(vb)
     vb.views["preset_list"].items = preset_names()
     vb.views["preset_list"].value = 1
     refresh_info()
+    refresh_preset_canvas()
   end
 
-  -- Preview the currently selected preset
+  -- Preview the currently selected preset (non-destructive: temp instrument)
   local function do_preview()
     local p = presets[sel_preset]
     if not p then return end
 
-    local song      = renoise.song()
-    local instr     = song.selected_instrument
-    local instr_idx = song.selected_instrument_index
-    if not instr then return end
-
+    local song = renoise.song()
     stop_preset_preview()
 
-    -- Route through unified apply function (handles nes_* and math types)
+    -- Insert a temporary instrument at the end so selected instrument is untouched
+    local temp_idx = #song.instruments + 1
+    song:insert_instrument_at(temp_idx)
+    local instr = song.instruments[temp_idx]
+    instr.name  = "8chip Preview [temp]"
     apply_preset_to_instrument(p, instr)
 
     local track_idx = gen.find_sequencer_track()
-    preview_ctx     = { instr_idx = instr_idx, track_idx = track_idx }
+    preview_ctx     = { instr_idx = temp_idx, track_idx = track_idx }
     preview_active  = true
 
-    song:trigger_sample_note_on(instr_idx, 1, track_idx, 48, 1.0, false)
+    song:trigger_sample_note_on(temp_idx, 1, track_idx, 48, 1.0, false)
 
     local function note_off_timer()
       stop_preset_preview()
@@ -272,6 +362,7 @@ function create_presets_panel(vb)
       notifier = function(idx)
         sel_preset = idx
         refresh_info()
+        refresh_preset_canvas()
       end,
     },
 
@@ -309,8 +400,13 @@ function create_presets_panel(vb)
       text  = "\"Load Preset\" adds one instrument. \"Load Full Kit\" adds all in the category.",
       style = "disabled",
     },
+    vb:space { height = 8 },
   }
 
+  canvas_view = CW.create(vb, W, 80)
+  panel:add_child(canvas_view)
+
   refresh_info()
+  refresh_preset_canvas()
   return panel
 end

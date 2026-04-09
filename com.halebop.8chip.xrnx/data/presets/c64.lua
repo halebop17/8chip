@@ -109,4 +109,33 @@ return {
     loop_mode     = "forward",
     starter_phrase = "glide_bass",
   },
+  -- Authentic AKWF SID samples
+  {
+    name          = "SID  -  HW Sawtooth",
+    description   = "Authentic SID sawtooth recorded from AKWF single-cycle",
+    waveform      = "chip_sid_sawtooth",
+    loop          = true,
+    loop_mode     = "forward",
+  },
+  {
+    name          = "SID  -  HW Triangle",
+    description   = "Authentic SID triangle recorded from AKWF single-cycle",
+    waveform      = "chip_sid_triangle",
+    loop          = true,
+    loop_mode     = "forward",
+  },
+  {
+    name          = "SID  -  HW Pulse 25%",
+    description   = "Authentic SID pulse at 25% duty (AKWF single-cycle)",
+    waveform      = "chip_sid_pulse_25",
+    loop          = true,
+    loop_mode     = "forward",
+  },
+  {
+    name          = "SID  -  HW Pulse 50%",
+    description   = "Authentic SID pulse at 50% duty / square (AKWF single-cycle)",
+    waveform      = "chip_sid_pulse_50",
+    loop          = true,
+    loop_mode     = "forward",
+  },
 }
