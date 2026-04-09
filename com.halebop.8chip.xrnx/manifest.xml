@@ -3,7 +3,7 @@
   <Id>com.halebop.8chip</Id>
   <Name>8chip</Name>
   <Version>1.2</Version>
-  <Category>Phrases, Generator, MIDI, Utility</Category>
+  <Category>Phrase, Generator, MIDI, Game</Category>
   <Author>halebop</Author>
   <Description>A composing toolbox for 8-bit/16-bit style chiptunes. Generate waveforms, arpeggios, and chiptune FX.</Description>
   <Homepage>https://github.com/halebop17/8chip</Homepage>
