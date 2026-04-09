@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Id>com.halebop.8chip</Id>
   <Name>8chip</Name>
-  <Version>1.1</Version>
+  <Version>1.2</Version>
   <Category>Phrases, Generator, MIDI, Utility</Category>
   <Author>halebop</Author>
   <Description>A composing toolbox for 8-bit/16-bit style chiptunes. Generate waveforms, arpeggios, and chiptune FX.</Description>
